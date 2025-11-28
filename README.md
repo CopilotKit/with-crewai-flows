@@ -5,7 +5,8 @@ This is a starter template for building AI agents using [CrewAI Flows](https://d
 ## Prerequisites
 
 - Node.js 18+ 
-- Python 3.8+
+- Python 3.10+
+- [uv](https://docs.astral.sh/uv/) - Fast Python package installer and resolver
 - Any of the following package managers:
   - [pnpm](https://pnpm.io/installation) (recommended)
   - npm
@@ -32,7 +33,7 @@ yarn install
 bun install
 ```
 
-> **Note:** Installing the package dependencies will also install the agent's python dependencies via the `install:agent` script.
+> **Note:** Installing the package dependencies will also install the agent's Python dependencies via the `install:agent` script using `uv`. This will automatically create a virtual environment and install dependencies from `pyproject.toml`.
 
 
 2. Set up your OpenAI API key:
@@ -67,7 +68,7 @@ The following scripts can also be run using your preferred package manager:
 - `build` - Builds the Next.js application for production
 - `start` - Starts the production server
 - `lint` - Runs ESLint for code linting
-- `install:agent` - Installs Python dependencies for the agent
+- `install:agent` - Installs Python dependencies for the agent using `uv`
 
 ## Documentation
 

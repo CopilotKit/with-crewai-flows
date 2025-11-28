@@ -2,8 +2,6 @@
 REM Navigate to the agent directory
 cd /d %~dp0\..\agent
 
-REM Activate the virtual environment
-call .venv\Scripts\activate.bat
-
-REM Run the agent
-.venv\Scripts\python.exe server.py 
+REM Run the agent using uv
+REM uv run will automatically use the virtual environment and installed dependencies
+uv run python main.py

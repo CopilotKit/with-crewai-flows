@@ -2,10 +2,13 @@
 This is the main entry point for the agent.
 It defines the workflow graph, state, tools, nodes and edges.
 """
+
 import json
+
+from ag_ui_crewai.sdk import CopilotKitState, copilotkit_stream
+from crewai.flow.flow import Flow, listen, router, start
 from litellm import completion
-from crewai.flow.flow import Flow, start, router, listen
-from ag_ui_crewai.sdk import copilotkit_stream, CopilotKitState
+
 
 class AgentState(CopilotKitState):
     """
@@ -15,8 +18,10 @@ class AgentState(CopilotKitState):
     the CopilotKitState fields. We're also adding a custom field, `language`,
     which will be used to set the language of the agent.
     """
+
     proverbs: list[str] = []
     # your_custom_agent_state: str = ""
+
 
 GET_WEATHER_TOOL = {
     "type": "function",
@@ -27,13 +32,13 @@ GET_WEATHER_TOOL = {
             "type": "object",
             "properties": {
                 "location": {
-                    "type": "string", 
-                    "description": "The city and state, e.g. San Francisco, CA"
-                    }
-                    },
-            "required": ["location"]
-        }
-    }
+                    "type": "string",
+                    "description": "The city and state, e.g. San Francisco, CA",
+                }
+            },
+            "required": ["location"],
+        },
+    },
 }
 
 tools = [
@@ -45,6 +50,7 @@ tool_handlers = {
     "get_weather": lambda args: f"The weather for {args['location']} is 70 degrees, clear skies, 45% humidity, 5 mph wind, and feels like 72 degrees."
     # your tool handler here
 }
+
 
 class SampleAgentFlow(Flow[AgentState]):
     """
@@ -67,7 +73,7 @@ class SampleAgentFlow(Flow[AgentState]):
         - Getting a response from the model
         - Handling tool calls
 
-        For more about the ReAct design pattern, see: 
+        For more about the ReAct design pattern, see:
         https://www.perplexity.ai/search/react-agents-NcXLQhreS0WDzpVaS4m9Cg
         """
         system_prompt = f"You are a helpful assistant. The current proverbs are {self.state.proverbs}."
@@ -77,28 +83,19 @@ class SampleAgentFlow(Flow[AgentState]):
         #    copilotkit_stream and set stream=True.
         response = await copilotkit_stream(
             completion(
-
                 # 1.1 Specify the model to use
                 model="openai/gpt-4o",
                 messages=[
-                    {
-                        "role": "system", 
-                        "content": system_prompt
-                    },
-                    *self.state.messages
+                    {"role": "system", "content": system_prompt},
+                    *self.state.messages,
                 ],
-
                 # 1.2 Bind the tools to the model
-                tools=[
-                    *self.state.copilotkit.actions,
-                    GET_WEATHER_TOOL
-                ],
-
+                tools=[*self.state.copilotkit.actions, GET_WEATHER_TOOL],
                 # 1.3 Disable parallel tool calls to avoid race conditions,
                 #     enable this for faster performance if you want to manage
                 #     the complexity of running tool calls in parallel.
                 parallel_tool_calls=False,
-                stream=True
+                stream=True,
             )
         )
 
@@ -116,8 +113,9 @@ class SampleAgentFlow(Flow[AgentState]):
 
             # 4. Check for tool calls in the response and handle them. If the tool call
             #    is a CopilotKit action, we return the response to CopilotKit to handle
-            if (tool_call_name in
-                [action["function"]["name"] for action in self.state.copilotkit.actions]):
+            if tool_call_name in [
+                action["function"]["name"] for action in self.state.copilotkit.actions
+            ]:
                 return "route_end"
 
             # 5. Otherwise, we handle the tool call on the backend
@@ -125,11 +123,9 @@ class SampleAgentFlow(Flow[AgentState]):
             result = handler(tool_call_args)
 
             # 6. Append the result to the messages in state
-            self.state.messages.append({
-                "role": "tool",
-                "content": result,
-                "tool_call_id": tool_call_id
-            })
+            self.state.messages.append(
+                {"role": "tool", "content": result, "tool_call_id": tool_call_id}
+            )
 
             # 7. Return to the follow up route to continue the conversation
             return "route_follow_up"
